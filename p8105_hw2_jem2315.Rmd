@@ -7,6 +7,7 @@ output: github_document
 
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
+library(readxl)
 ```
 
 ## Problem 1
@@ -25,3 +26,20 @@ stations_data = read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") |
 This NYC transit subway data set contains information on New York City subway station names, the latitude and longitude of the station, the routes that run through them, if entry is permitted, vending availability, what the entrance types are, and if they follow ADA compliance. For data cleaning, I standardized all variable names using clean_names(), kept only the variables needed for analysis using select(), and converted the entry variable from a character variable to a logical variable. This data set has `r nrow(stations_data)` rows and `r ncol(stations_data)` columns. The data set is not fully tidy because routes information is spread throughout multiple columns (route1 through route11) instead of in a single variable for route.
 
 ## Problem 2
+```{r}
+mrtrash_df =
+  read_excel("data/202610 Trash Wheel Collection Data.xlsx", na = c(".", "NA", ""), sheet = "Mr. Trash Wheel",
+    skip = 1,
+    range = cell_cols("A:N")
+  ) |>
+  janitor::clean_names() |>
+  filter(!is.na(dumpster)) |>
+  mutate(
+    sports_balls = as.integer(round(sports_balls)),
+    trash_wheel = "Mr. Trash Wheel"
+  )
+
+proftrash_df = 
+  read_excel()
+```
+
