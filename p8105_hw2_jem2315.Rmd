@@ -39,7 +39,7 @@ mrtrash_df =
     trash_wheel = "Mr. Trash Wheel"
   )
 
-proftrash_df = 
-  read_excel()
+#proftrash_df = 
+  #read_excel()
 ```
 
