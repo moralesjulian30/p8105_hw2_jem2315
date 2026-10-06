@@ -1,0 +1,27 @@
+---
+title: "p8150_hw2_jem2315"
+author: "Julian Morales"
+date: "2026-10-05"
+output: github_document
+---
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+## Problem 1
+
+```{r message=FALSE, warning=FALSE}
+stations_data = read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") |> 
+  janitor::clean_names() |> 
+  select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) |> 
+  mutate(
+    entry = case_match(entry, 
+                       "YES"~TRUE,
+                       "NO"~FALSE)
+  )
+```
+
+This NYC transit subway data set contains information on New York City subway station names, the latitude and longitude of the station, the routes that run through them, if entry is permitted, vending availability, what the entrance types are, and if they follow ADA compliance. For data cleaning, I standardized all variable names using clean_names(), kept only the variables needed for analysis using select(), and converted the entry variable from a character variable to a logical variable. This data set has `r nrow(stations_data)` rows and `r ncol(stations_data)` columns. The data set is not fully tidy because routes information is spread throughout multiple columns (route1 through route11) instead of in a single variable for route.
+
+## Problem 2
