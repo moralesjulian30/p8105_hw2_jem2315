@@ -26,7 +26,7 @@ stations_data = read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") |
 This NYC transit subway data set contains information on New York City subway station names, the latitude and longitude of the station, the routes that run through them, if entry is permitted, vending availability, what the entrance types are, and if they follow ADA compliance. For data cleaning, I standardized all variable names using clean_names(), kept only the variables needed for analysis using select(), and converted the entry variable from a character variable to a logical variable. This data set has `r nrow(stations_data)` rows and `r ncol(stations_data)` columns. The data set is not fully tidy because routes information is spread throughout multiple columns (route1 through route11) instead of in a single variable for route.
 
 ## Problem 2
-```{r}
+```{r message=FALSE, warning=FALSE}
 mrtrash_df =
   read_excel("data/202610 Trash Wheel Collection Data.xlsx", na = c(".", "NA", ""), sheet = "Mr. Trash Wheel", skip = 1, range = cell_cols("A:N")) |>
   janitor::clean_names() |>
@@ -103,6 +103,61 @@ mci_baseline =
   is.na(age_at_onset) |
     (age_at_onset > current_age)
 )
-  
+
+n_mci =
+  mci_baseline |>
+  filter(!is.na(age_at_onset)) |>
+  nrow()
+
+women_apoe4 = 
+  nrow(mci_baseline |> 
+         filter(sex == "Female", apoe4 == "Carrier"))/
+  nrow(mci_baseline |> 
+         filter(sex == "Female"))
 ```
 
+In the import process of `mci_baseline` data, it was important to mutate `sex` and `apoe4` variables into factor variables using case_match function to convert their numerical values into more meaningful values. To ensure that only those who did NOT have MCI at baseline were in the data set, filter was used to keep those who's age of onset is older than their current age, and those who never developed MCI throughout the study. The total number of participants was `r nrow(mci_baseline)`. Of those recruited, `r n_mci` developed MCI. The average baseline age is `r round(mean(pull(mci_baseline, current_age)))`. The proportion of women in the study who are APOE4 carriers is `r women_apoe4`.
+
+```{r message=FALSE, warning=FALSE}
+mci_amyloid = 
+  read_csv("data/mci_amyloid.csv", skip = 1, na = c(".", "NA", "")) |> 
+  janitor::clean_names() |>
+  rename(id = study_id) |> 
+  pivot_longer(
+    baseline:time_8,
+    names_to = "Time Interval",
+    values_to = "Amyloid Measure"
+  )
+
+only_baseline=
+ anti_join(
+    mci_baseline,
+    mci_amyloid |> distinct(id),
+    by = "id"
+  )
+
+only_amyloid = 
+  anti_join(
+    mci_amyloid |> distinct(id),
+    mci_baseline,
+    by = "id"
+  )
+
+mci_df = 
+  inner_join(
+    mci_baseline,
+    mci_amyloid,
+    by = "id"
+  )
+
+write_csv(
+  mci_df,
+  "data/mci_df.csv"
+)
+```
+
+In the data set `mci_amyloid` data was cleaned and made tidy by `pivot_longer` to make the time interval of amyloid measure a column, and the amyloid measure value into another for each subject. The study_id column was renamed to id, to remain consistent with the `mci_baseline` dataset.
+
+The participants that only appear in `MCI_baseline` are `r paste(pull(only_baseline, id), collapse = ", ")`, while those that only appear in the mci_amyloid data set are `r paste(pull(only_amyloid, id), collapse = ", ")`.
+
+After combining `MCI_baseline` and `MCI_amyloid` data sets into `MCI_df`, the resulting data set contains information on each participants current age, education, APOE4 status, age at onset, the time interval their Amyloid levels were measured, and the Amyloid measure value for participants that are in both original baseline and amyloid datasets. 
